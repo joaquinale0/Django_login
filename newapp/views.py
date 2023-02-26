@@ -18,6 +18,13 @@ def existeCorreo(input):
         return False
     else:
         return True
+    
+def existeUsuario(input):
+    users = Usuario.objects.filter(usuario=input)
+    if len(users) == 0:
+        return False
+    else:
+        return True
   
 
 def iniciarSesion(request):
@@ -30,7 +37,6 @@ def iniciarSesion(request):
         if cantUsuario != 0:
             usuario = Usuario.objects.get(correo=request.POST['ICorreo'])
             if usuario.contrasenaGet() == request.POST['IContrasena'] :
-                usuario.ultima_conexion = datetime.now()
                 usuario.save()
                 return    render(request, "perfil.html", {'usuario':usuario, "fecha_actual":fecha_actual})
             else:
@@ -57,7 +63,7 @@ def crearUsuario(request):
         Rcontra = ""
 
         if existeCorreo(request.POST.get('R-Correo')) == False:
-            if len(request.POST.get('R-NombreUsuario')) > 4:
+            if len(request.POST.get('R-NombreUsuario')) > 4 and existeUsuario(request.POST.get('R-NombreUsuario')) == False:
                 if len(request.POST.get('R-Contrasena')) > 4:
                     if request.POST.get('R-fechaNacimiento') != "1900-01-01":
                         Usuario.objects.create( usuario = request.POST.get('R-NombreUsuario'), correo = request.POST.get('R-Correo'), contrasena = request.POST.get('R-Contrasena'), fecha_nacimiento = request.POST.get('R-fechaNacimiento'), descripcion = "Yo soy " + request.POST.get('R-NombreUsuario'))
@@ -68,8 +74,12 @@ def crearUsuario(request):
                 else:
                     Rcontra = "Debe tener minimo 5 caracteres"
                     return render(request, "index.html",{"Rcorreo": Rcorreo, "Rfecha": Rfecha, "Rcontra": Rcontra, "fecha_actual":fecha_actual} )
-            else:
+            # Consulta cual es el error al crear el nombre de usuario
+            elif len(request.POST.get('R-NombreUsuario')) <= 4 :
                 Rusuario = "Debe tener minimo 5 caracteres"
+                return render(request, "index.html",{"Rcorreo": Rcorreo, "Rfecha": Rfecha, "Rusuario": Rusuario, "fecha_actual":fecha_actual} )
+            else:
+                Rusuario = "Nombre de usuario ya existe"
                 return render(request, "index.html",{"Rcorreo": Rcorreo, "Rfecha": Rfecha, "Rusuario": Rusuario, "fecha_actual":fecha_actual} )
         else:
             Rcorreo = "Correo ya existe"
